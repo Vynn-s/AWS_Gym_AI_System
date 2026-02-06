@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import StatCard from "@/components/ui/StatCard";
 import Button from "@/components/ui/Button";
 
@@ -103,6 +104,23 @@ export default function AdminPage() {
   return (
     <main className="min-h-screen bg-zinc-950 px-4 py-10 sm:px-8">
       <div className="mx-auto max-w-5xl space-y-10">
+        {/* ── Back button ───────────────────────────────────────────── */}
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-sm text-zinc-400 transition-colors hover:text-zinc-100"
+        >
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to Home
+        </Link>
+
         {/* ── Page header ──────────────────────────────────────────────── */}
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-zinc-100">

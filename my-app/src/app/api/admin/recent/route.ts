@@ -14,7 +14,7 @@ export async function GET() {
     // If the "name" column doesn't exist on members, fall back to member_id only.
     const { data, error } = await supabase
       .from("checkins")
-      .select("member_id, checked_in_at, members(name)")
+      .select("member_id, checked_in_at, members(full_name)")
       .order("checked_in_at", { ascending: false })
       .limit(30);
 
@@ -45,7 +45,7 @@ export async function GET() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const rows = (data ?? []).map((r: any) => ({
       memberId: r.member_id,
-      memberName: r.members?.name ?? null,
+      memberName: r.members?.full_name ?? null,
       checkedInAt: r.checked_in_at,
     }));
 

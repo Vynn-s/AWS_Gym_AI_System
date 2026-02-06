@@ -11,7 +11,7 @@ import Button from "@/components/ui/Button";
  * POST to /api/checkin with the member ID.
  * Expects JSON response: { ok: true } on success, or { ok: false, error: "..." } on failure.
  */
-async function submitCheckIn(memberId: string): Promise<{ ok: boolean; error?: string }> {
+async function submitCheckIn(memberId: string): Promise<{ ok: boolean; error?: string; memberName?: string }> {
   const res = await fetch("/api/checkin", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -24,7 +24,7 @@ async function submitCheckIn(memberId: string): Promise<{ ok: boolean; error?: s
     return { ok: false, error: data.error ?? "Check-in failed. Please try again." };
   }
 
-  return { ok: true };
+  return { ok: true, memberName: data.memberName ?? undefined };
 }
 
 export default function CheckInPage() {
@@ -53,7 +53,8 @@ export default function CheckInPage() {
       const result = await submitCheckIn(memberId);
 
       if (result.ok) {
-        setSuccess("Check-in recorded successfully \u2705");
+        const name = result.memberName;
+        setSuccess(name ? `Welcome, ${name}! Check-in recorded ✅` : "Check-in recorded successfully ✅");
         setMemberId(""); // clear input after success
 
         // Re-focus input so staff can scan the next member immediately
