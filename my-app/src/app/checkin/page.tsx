@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 
@@ -18,6 +18,9 @@ export default function CheckInPage() {
   const [success, setSuccess] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  // Ref used to re-focus the input after a successful check-in
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
   const handleCheckIn = async () => {
     // Reset messages
     setError("");
@@ -34,8 +37,11 @@ export default function CheckInPage() {
     try {
       // TODO: Replace mockCheckIn with real Supabase insert
       await mockCheckIn(memberId);
-      setSuccess("Check-in recorded successfully");
+      setSuccess("Check-in recorded successfully \u2705");
       setMemberId(""); // clear input after success
+
+      // Re-focus input so staff can scan the next member immediately
+      inputRef.current?.focus();
     } catch {
       // TODO: Handle real Supabase errors here
       setError("Something went wrong. Please try again.");
@@ -59,35 +65,53 @@ export default function CheckInPage() {
         {/* Divider */}
         <hr className="my-6 border-zinc-800" />
 
-        {/* Member ID input */}
-        <Input
-          label="Member ID"
-          name="memberId"
-          value={memberId}
-          onChange={(e) => {
-            setMemberId(e.target.value);
-            // Clear messages when user starts typing again
-            if (error) setError("");
-            if (success) setSuccess("");
+        {/* Member ID input — auto-focused on page load */}
+        <div
+          ref={(el) => {
+            // Grab the <input> inside the wrapper so we can re-focus after submit
+            if (el) inputRef.current = el.querySelector("input");
           }}
-          placeholder="Enter or scan your Member ID"
-          error={error}
-        />
+        >
+          <Input
+            label="Member ID"
+            name="memberId"
+            value={memberId}
+            onChange={(e) => {
+              setMemberId(e.target.value);
+              // Clear messages when user starts typing again
+              if (error) setError("");
+              if (success) setSuccess("");
+            }}
+            placeholder="Enter or scan your Member ID"
+            error={error}
+            autoFocus
+          />
+        </div>
 
-        {/* Check In button */}
+        {/* Check In button — disabled when input is empty or loading */}
         <Button
           onClick={handleCheckIn}
           isLoading={isLoading}
+          disabled={!memberId.trim()}
           className="mt-5 w-full"
         >
           Check In
         </Button>
 
-        {/* Success message */}
+        {/* Success alert */}
         {success && (
-          <p className="mt-4 rounded-lg border border-green-800 bg-green-950/40 px-4 py-2.5 text-center text-sm text-green-400">
-            {success}
-          </p>
+          <div className="mt-4 flex items-center gap-2 rounded-lg border border-green-800 bg-green-950/40 px-4 py-3 text-sm text-green-400">
+            <span className="shrink-0 text-base">&#9989;</span>
+            <p>{success}</p>
+          </div>
+        )}
+
+        {/* Form-level error alert (shown for non-validation errors) */}
+        {error && !memberId && (
+          <div className="mt-4 flex items-center gap-2 rounded-lg border border-red-800 bg-red-950/40 px-4 py-3 text-sm text-red-400">
+            <span className="shrink-0 text-base">&#10060;</span>
+            <p>{error}</p>
+          </div>
         )}
       </div>
     </main>

@@ -16,6 +16,8 @@ interface InputProps {
   error?: string;
   /** HTML name attribute for form submission. */
   name?: string;
+  /** Automatically focus this input on mount. */
+  autoFocus?: boolean;
   /** Extra Tailwind classes to merge on the wrapper. */
   className?: string;
 }
@@ -31,6 +33,7 @@ export default function Input({
   placeholder = "",
   error,
   name,
+  autoFocus = false,
   className = "",
 }: InputProps) {
   return (
@@ -53,6 +56,7 @@ export default function Input({
         value={value}
         onChange={onChange}
         placeholder={placeholder}
+        autoFocus={autoFocus}
         className={`
           w-full rounded-lg border px-4 py-2.5 text-sm
           bg-zinc-900 text-zinc-100 placeholder-zinc-500

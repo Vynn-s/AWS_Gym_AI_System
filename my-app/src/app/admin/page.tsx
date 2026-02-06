@@ -31,6 +31,10 @@ export default function AdminPage() {
           <p className="mt-1 text-sm text-zinc-500">
             Overview of gym activity and AI insights.
           </p>
+          {/* TODO: Replace with real timestamp from Supabase */}
+          <p className="mt-2 text-xs text-zinc-600">
+            Last updated: Feb 6, 2026 — 3:45 PM (mock)
+          </p>
         </div>
 
         {/* ── Stats grid ───────────────────────────────────────────────── */}
@@ -49,12 +53,12 @@ export default function AdminPage() {
           <StatCard
             title="Peak Hour"
             value="6 – 7 PM"
-            subtitle="Placeholder"
+            subtitle="⏳ Placeholder — needs Supabase"
           />
           <StatCard
             title="Busiest Day"
             value="Monday"
-            subtitle="Placeholder"
+            subtitle="⏳ Placeholder — needs Supabase"
           />
         </section>
 
@@ -65,8 +69,8 @@ export default function AdminPage() {
             Attendance Summary
           </h2>
 
-          <div className="overflow-hidden rounded-xl border border-zinc-800">
-            <table className="w-full text-left text-sm">
+          <div className="overflow-x-auto overflow-hidden rounded-xl border border-zinc-800">
+            <table className="min-w-[400px] w-full text-left text-sm">
               <thead className="bg-zinc-900 text-zinc-400">
                 <tr>
                   <th className="px-5 py-3 font-medium">Date</th>
@@ -102,9 +106,14 @@ export default function AdminPage() {
             and actionable recommendations to optimise gym operations.
           </p>
 
-          <Button disabled className="mt-5">
-            Generate Insights — Coming soon
-          </Button>
+          <div className="mt-5 flex items-center gap-3">
+            <Button disabled>
+              Generate Insights
+            </Button>
+            <span className="text-xs text-zinc-600">
+              Coming soon — requires AWS Bedrock integration
+            </span>
+          </div>
         </section>
       </div>
     </main>
