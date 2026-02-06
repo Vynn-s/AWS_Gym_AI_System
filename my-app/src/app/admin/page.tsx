@@ -1,25 +1,73 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import StatCard from "@/components/ui/StatCard";
 import Button from "@/components/ui/Button";
 
-// ── Mock data ────────────────────────────────────────────────────────────────
-// TODO: Replace with real data fetched from Supabase
-const mockAttendance = [
-  { date: "2026-02-06", checkins: 47 },
-  { date: "2026-02-05", checkins: 52 },
-  { date: "2026-02-04", checkins: 38 },
-  { date: "2026-02-03", checkins: 61 },
-  { date: "2026-02-02", checkins: 55 },
-  { date: "2026-02-01", checkins: 43 },
-  { date: "2026-01-31", checkins: 29 },
-];
+// ── Types for API responses ──────────────────────────────────────────────────
+interface StatsData {
+  totalToday: number;
+  totalWeek: number;
+  peakHour: string;
+  busiestDay: string;
+  lastUpdated: string;
+}
 
-const todayCheckins = mockAttendance[0].checkins;
-const weekCheckins = mockAttendance.reduce((sum, d) => sum + d.checkins, 0);
+interface RecentCheckin {
+  memberId: string;
+  memberName: string | null;
+  checkedInAt: string;
+}
 
 export default function AdminPage() {
+  // ── Stats state ──────────────────────────────────────────────────────────
+  const [stats, setStats] = useState<StatsData | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState("");
+
+  // ── Recent check-ins state ───────────────────────────────────────────────
+  const [recent, setRecent] = useState<RecentCheckin[]>([]);
+  const [recentLoading, setRecentLoading] = useState(true);
+  const [recentError, setRecentError] = useState("");
+
+  // ── Fetch on mount ───────────────────────────────────────────────────────
+  useEffect(() => {
+    // Fetch stats
+    fetch("/api/admin/stats")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.ok) {
+          setStats(json);
+        } else {
+          setStatsError(json.error ?? "Failed to load stats.");
+        }
+      })
+      .catch(() => setStatsError("Network error – could not reach the server."))
+      .finally(() => setStatsLoading(false));
+
+    // Fetch recent check-ins
+    fetch("/api/admin/recent")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.ok) {
+          setRecent(json.data);
+        } else {
+          setRecentError(json.error ?? "Failed to load recent check-ins.");
+        }
+      })
+      .catch(() => setRecentError("Network error – could not reach the server."))
+      .finally(() => setRecentLoading(false));
+  }, []);
+
+  // ── Helpers ──────────────────────────────────────────────────────────────
+  function formatLastUpdated(iso: string) {
+    const d = new Date(iso);
+    return d.toLocaleString(undefined, {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+  }
+
   return (
     <main className="min-h-screen bg-zinc-950 px-4 py-10 sm:px-8">
       <div className="mx-auto max-w-5xl space-y-10">
@@ -31,67 +79,95 @@ export default function AdminPage() {
           <p className="mt-1 text-sm text-zinc-500">
             Overview of gym activity and AI insights.
           </p>
-          {/* TODO: Replace with real timestamp from Supabase */}
           <p className="mt-2 text-xs text-zinc-600">
-            Last updated: Feb 6, 2026 — 3:45 PM (mock)
+            {statsLoading
+              ? "Loading…"
+              : stats
+                ? `Last updated: ${formatLastUpdated(stats.lastUpdated)}`
+                : "—"}
           </p>
         </div>
 
         {/* ── Stats grid ───────────────────────────────────────────────── */}
-        {/* TODO: Fetch real stats from Supabase */}
+        {statsError && (
+          <p className="rounded-lg bg-red-900/30 px-4 py-2 text-sm text-red-400">
+            {statsError}
+          </p>
+        )}
+
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
             title="Check-ins Today"
-            value={todayCheckins}
+            value={statsLoading ? "…" : (stats?.totalToday ?? 0)}
             subtitle="Updated just now"
           />
           <StatCard
             title="Check-ins This Week"
-            value={weekCheckins}
+            value={statsLoading ? "…" : (stats?.totalWeek ?? 0)}
             subtitle="Last 7 days"
           />
           <StatCard
             title="Peak Hour"
-            value="6 – 7 PM"
-            subtitle="⏳ Placeholder — needs Supabase"
+            value={statsLoading ? "…" : (stats?.peakHour ?? "—")}
+            subtitle="Based on last 7 days"
           />
           <StatCard
             title="Busiest Day"
-            value="Monday"
-            subtitle="⏳ Placeholder — needs Supabase"
+            value={statsLoading ? "…" : (stats?.busiestDay ?? "—")}
+            subtitle="Based on last 30 days"
           />
         </section>
 
-        {/* ── Attendance Summary ────────────────────────────────────────── */}
-        {/* TODO: Replace mock data with Supabase query */}
+        {/* ── Attendance History ────────────────────────────────────────── */}
         <section>
           <h2 className="mb-4 text-lg font-semibold text-zinc-100">
-            Attendance Summary
+            Attendance History
           </h2>
 
-          <div className="overflow-x-auto overflow-hidden rounded-xl border border-zinc-800">
-            <table className="min-w-[400px] w-full text-left text-sm">
-              <thead className="bg-zinc-900 text-zinc-400">
-                <tr>
-                  <th className="px-5 py-3 font-medium">Date</th>
-                  <th className="px-5 py-3 font-medium text-right">Check-ins</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-800">
-                {mockAttendance.map((row) => (
-                  <tr
-                    key={row.date}
-                    className="bg-zinc-950 transition-colors hover:bg-zinc-900"
-                  >
-                    <td className="px-5 py-3 text-zinc-300">{row.date}</td>
-                    <td className="px-5 py-3 text-right text-zinc-100 font-medium">
-                      {row.checkins}
-                    </td>
+          {recentError && (
+            <p className="mb-3 rounded-lg bg-red-900/30 px-4 py-2 text-sm text-red-400">
+              {recentError}
+            </p>
+          )}
+
+          {recentLoading ? (
+            <p className="text-sm text-zinc-500">Loading recent check-ins…</p>
+          ) : recent.length === 0 ? (
+            <p className="text-sm text-zinc-500">No check-ins recorded yet.</p>
+          ) : (
+            <div className="overflow-x-auto overflow-hidden rounded-xl border border-zinc-800">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-zinc-900 text-zinc-400">
+                  <tr>
+                    <th className="px-5 py-3 font-medium">Member ID</th>
+                    <th className="px-5 py-3 font-medium">Name</th>
+                    <th className="px-5 py-3 font-medium text-right">Checked In At</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-zinc-800">
+                  {recent.map((row, i) => (
+                    <tr
+                      key={`${row.memberId}-${row.checkedInAt}-${i}`}
+                      className="bg-zinc-950 transition-colors hover:bg-zinc-900"
+                    >
+                      <td className="px-5 py-3 font-mono text-zinc-300">
+                        {row.memberId}
+                      </td>
+                      <td className="px-5 py-3 text-zinc-300">
+                        {row.memberName ?? "—"}
+                      </td>
+                      <td className="px-5 py-3 text-right text-zinc-100 font-medium">
+                        {new Date(row.checkedInAt).toLocaleString(undefined, {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
 
         {/* ── AI Insights ──────────────────────────────────────────────── */}
