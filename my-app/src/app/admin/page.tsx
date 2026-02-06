@@ -30,6 +30,11 @@ export default function AdminPage() {
   const [recentLoading, setRecentLoading] = useState(true);
   const [recentError, setRecentError] = useState("");
 
+  // ── Insights state ───────────────────────────────────────────────────────
+  const [insights, setInsights] = useState("");
+  const [insightsLoading, setInsightsLoading] = useState(false);
+  const [insightsError, setInsightsError] = useState("");
+
   // ── Fetch on mount ───────────────────────────────────────────────────────
   useEffect(() => {
     // Fetch stats
@@ -58,6 +63,33 @@ export default function AdminPage() {
       .catch(() => setRecentError("Network error – could not reach the server."))
       .finally(() => setRecentLoading(false));
   }, []);
+
+  // ── Generate Insights handler ────────────────────────────────────────────
+  async function handleGenerateInsights() {
+    try {
+      setInsightsLoading(true);
+      setInsightsError("");
+      setInsights("");
+
+      const res = await fetch("/api/insights", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || !data.ok) {
+        setInsightsError(data.error ?? "Failed to generate insights.");
+        return;
+      }
+
+      setInsights(data.insights ?? "");
+    } catch {
+      setInsightsError("Network error. Please try again.");
+    } finally {
+      setInsightsLoading(false);
+    }
+  }
 
   // ── Helpers ──────────────────────────────────────────────────────────────
   function formatLastUpdated(iso: string) {
@@ -135,9 +167,9 @@ export default function AdminPage() {
           ) : recent.length === 0 ? (
             <p className="text-sm text-zinc-500">No check-ins recorded yet.</p>
           ) : (
-            <div className="overflow-x-auto overflow-hidden rounded-xl border border-zinc-800">
+            <div className="dark-scrollbar max-h-[480px] overflow-y-auto overflow-x-auto rounded-xl border border-zinc-800">
               <table className="w-full text-left text-sm">
-                <thead className="bg-zinc-900 text-zinc-400">
+                <thead className="sticky top-0 bg-zinc-900 text-zinc-400">
                   <tr>
                     <th className="px-5 py-3 font-medium">Member ID</th>
                     <th className="px-5 py-3 font-medium">Name</th>
@@ -171,25 +203,135 @@ export default function AdminPage() {
         </section>
 
         {/* ── AI Insights ──────────────────────────────────────────────── */}
-        {/* TODO: Integrate AWS Bedrock / OpenAI for real AI-generated insights */}
-        <section className="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
-          <h2 className="text-lg font-semibold text-zinc-100">
-            AI-Generated Insights
-          </h2>
-          <p className="mt-2 text-sm leading-relaxed text-zinc-400">
-            Once connected, this section will display AI-powered analysis of
-            attendance trends, predicted peak hours, member retention patterns,
-            and actionable recommendations to optimise gym operations.
-          </p>
-
-          <div className="mt-5 flex items-center gap-3">
-            <Button disabled>
-              Generate Insights
-            </Button>
-            <span className="text-xs text-zinc-600">
-              Coming soon — requires AWS Bedrock integration
+        {/* TODO: Add caching/cooldown to prevent excessive API calls */}
+        {/* TODO: Save generated insights to Supabase for historical reference */}
+        {/* TODO: Add citations linking insights back to source data */}
+        <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 shadow-sm shadow-zinc-900/40">
+          {/* Header row */}
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-zinc-100">
+              AI-Generated Insights
+            </h2>
+            <span
+              className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                insights
+                  ? "bg-emerald-900/40 text-emerald-400 border border-emerald-800"
+                  : "bg-zinc-800 text-zinc-400 border border-zinc-700"
+              }`}
+            >
+              {insights ? "Live" : "Ready"}
             </span>
           </div>
+
+          {/* Helper text */}
+          <p className="mt-1.5 text-xs text-zinc-500">
+            Generates quick trends from the last 14 days of attendance.
+          </p>
+
+          {/* Generate button + tip */}
+          <div className="mt-5">
+            <Button
+              onClick={handleGenerateInsights}
+              disabled={insightsLoading}
+              isLoading={insightsLoading}
+            >
+              {insightsLoading ? "Generating…" : "Generate Insights"}
+            </Button>
+            <p className="mt-2 text-xs text-zinc-600">
+              Tip: Click once per update to reduce costs.
+            </p>
+          </div>
+
+          {/* Error state */}
+          {insightsError && (
+            <div className="mt-4 flex items-start gap-2 rounded-lg bg-red-900/20 border border-red-900/40 px-4 py-3">
+              <svg
+                className="mt-0.5 h-4 w-4 shrink-0 text-red-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <p className="text-sm text-red-400">{insightsError}</p>
+            </div>
+          )}
+
+          {/* Loading skeleton */}
+          {insightsLoading && (
+            <div className="mt-4 space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div
+                  key={i}
+                  className="h-12 animate-pulse rounded-xl bg-zinc-800"
+                  style={{ width: `${85 - i * 5}%` }}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Empty state (before first generation) */}
+          {!insights && !insightsLoading && !insightsError && (
+            <div className="mt-4 flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-700 bg-zinc-800/40 py-10 text-center">
+              <svg
+                className="mb-3 h-8 w-8 text-zinc-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 18v-5.25m0 0a6.01 6.01 0 0 0 1.5-.189m-1.5.189a6.01 6.01 0 0 1-1.5-.189m3.75 7.478a12.06 12.06 0 0 1-4.5 0m3.75 2.383a14.406 14.406 0 0 1-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 1 0-7.517 0c.85.493 1.509 1.333 1.509 2.316V18"
+                />
+              </svg>
+              <p className="text-sm text-zinc-400">
+                No insights yet.
+              </p>
+              <p className="mt-1 text-xs text-zinc-600">
+                Click <span className="text-zinc-400">Generate Insights</span>{" "}
+                to analyze recent attendance.
+              </p>
+            </div>
+          )}
+
+          {/* Insights list */}
+          {insights && !insightsLoading && (
+            <ul className="mt-4 space-y-2">
+              {insights
+                .split("\n")
+                .map((line) => line.replace(/^-\s*/, "").trim())
+                .filter(Boolean)
+                .map((bullet, i) => {
+                  const isLimitation =
+                    /\blimit(ed|ation)?\b/i.test(bullet) ||
+                    /\binsufficient\b/i.test(bullet) ||
+                    /\bcaution\b/i.test(bullet);
+
+                  return (
+                    <li
+                      key={i}
+                      className={`flex items-start gap-3 rounded-xl border px-4 py-3 text-sm leading-relaxed ${
+                        isLimitation
+                          ? "border-amber-800/50 bg-amber-900/20 text-amber-300"
+                          : "border-zinc-700/60 bg-zinc-800/60 text-zinc-300"
+                      }`}
+                    >
+                      <span
+                        className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${
+                          isLimitation ? "bg-amber-400" : "bg-emerald-400"
+                        }`}
+                      />
+                      {bullet}
+                    </li>
+                  );
+                })}
+            </ul>
+          )}
         </section>
       </div>
     </main>
