@@ -4,12 +4,27 @@ import React, { useRef, useState } from "react";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 
-// TODO: Replace this mock with a real Supabase insert.
-// Example:
-//   import { supabase } from "@/app/supabaseClient";
-//   const { error } = await supabase.from("checkins").insert({ member_id: memberId });
-async function mockCheckIn(memberId: string): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, 1500));
+// TODO: Add QR scanner integration (e.g. html5-qrcode) to auto-fill memberId
+// TODO: Add client-side rate limiting to prevent duplicate rapid submissions
+
+/**
+ * POST to /api/checkin with the member ID.
+ * Expects JSON response: { ok: true } on success, or { ok: false, error: "..." } on failure.
+ */
+async function submitCheckIn(memberId: string): Promise<{ ok: boolean; error?: string }> {
+  const res = await fetch("/api/checkin", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ memberId }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok || !data.ok) {
+    return { ok: false, error: data.error ?? "Check-in failed. Please try again." };
+  }
+
+  return { ok: true };
 }
 
 export default function CheckInPage() {
@@ -35,16 +50,19 @@ export default function CheckInPage() {
     setIsLoading(true);
 
     try {
-      // TODO: Replace mockCheckIn with real Supabase insert
-      await mockCheckIn(memberId);
-      setSuccess("Check-in recorded successfully \u2705");
-      setMemberId(""); // clear input after success
+      const result = await submitCheckIn(memberId);
 
-      // Re-focus input so staff can scan the next member immediately
-      inputRef.current?.focus();
+      if (result.ok) {
+        setSuccess("Check-in recorded successfully \u2705");
+        setMemberId(""); // clear input after success
+
+        // Re-focus input so staff can scan the next member immediately
+        inputRef.current?.focus();
+      } else {
+        setError(result.error ?? "Check-in failed.");
+      }
     } catch {
-      // TODO: Handle real Supabase errors here
-      setError("Something went wrong. Please try again.");
+      setError("Network error. Please check your connection and try again.");
     } finally {
       setIsLoading(false);
     }
