@@ -9,7 +9,7 @@ export default function Home() {
           <h1 className="text-3xl font-bold tracking-tight text-zinc-100">
             GymSight
             <span className="ml-2 text-base font-medium text-zinc-500">
-              (by Jervin)
+              by Jervin
             </span>
           </h1>
           <p className="mt-2 text-sm text-zinc-500">
