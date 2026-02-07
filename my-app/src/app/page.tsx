@@ -7,9 +7,9 @@ export default function Home() {
         {/* Title */}
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-zinc-100">
-            GymSight by Jervin
+            GymSight
             <span className="ml-2 text-base font-medium text-zinc-500">
-              (Live App)
+              (by Jervin)
             </span>
           </h1>
           <p className="mt-2 text-sm text-zinc-500">
