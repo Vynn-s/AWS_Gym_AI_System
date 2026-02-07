@@ -7,9 +7,9 @@ export default function Home() {
         {/* Title */}
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-zinc-100">
-            QR Gym Attendance
+            GymSight by Jervin
             <span className="ml-2 text-base font-medium text-zinc-500">
-              (Demo)
+              (Live App)
             </span>
           </h1>
           <p className="mt-2 text-sm text-zinc-500">
@@ -46,7 +46,7 @@ export default function Home() {
 
         {/* Footer note */}
         <p className="text-xs text-zinc-600">
-          Built with Next.js, Tailwind CSS &amp; Supabase
+          Built with Next.js, Tailwind CSS &amp; Supabase, and powered by AWS Bedrock generative AI.
         </p>
       </div>
     </main>
