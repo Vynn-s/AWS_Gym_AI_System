@@ -101,7 +101,7 @@ export default function CheckInPage() {
               if (error) setError("");
               if (success) setSuccess("");
             }}
-            placeholder="Enter or scan your Member ID"
+            placeholder="e.g. M-0001"
             error={error}
             autoFocus
           />
